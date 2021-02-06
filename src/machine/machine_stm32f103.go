@@ -198,14 +198,14 @@ func (spi SPI) configurePins(config SPIConfig) {
 //---------- I2C related types and code
 
 type I2C struct {
-	Bus *stm32.I2C_Type
+	Bus stm32.I2C_Type
 }
 
 // There are 2 I2C interfaces on the STM32F103xx.
 // Since the first interface is named I2C1, both I2C0 and I2C1 refer to I2C1.
 // TODO: implement I2C2.
 var (
-	I2C1 = I2C{Bus: stm32.I2C1}
+	I2C1 = (*I2C)(unsafe.Pointer(stm32.I2C1))
 	I2C0 = I2C1
 )
 
@@ -217,7 +217,7 @@ type I2CConfig struct {
 }
 
 // Configure is intended to setup the I2C interface.
-func (i2c I2C) Configure(config I2CConfig) error {
+func (i2c *I2C) Configure(config I2CConfig) error {
 	// Default I2C bus speed is 100 kHz.
 	if config.Frequency == 0 {
 		config.Frequency = TWI_FREQ_100KHZ
@@ -292,7 +292,7 @@ func (i2c I2C) Configure(config I2CConfig) error {
 // Tx does a single I2C transaction at the specified address.
 // It clocks out the given address, writes the bytes in w, reads back len(r)
 // bytes and stores them in r, and generates a stop condition on the bus.
-func (i2c I2C) Tx(addr uint16, w, r []byte) error {
+func (i2c *I2C) Tx(addr uint16, w, r []byte) error {
 	var err error
 	if len(w) != 0 {
 		// start transmission for writing
@@ -547,7 +547,7 @@ func (i2c I2C) Tx(addr uint16, w, r []byte) error {
 const i2cTimeout = 1000
 
 // signalStart sends a start signal.
-func (i2c I2C) signalStart() error {
+func (i2c *I2C) signalStart() error {
 	// Wait until I2C is not busy
 	timeout := i2cTimeout
 	for i2c.Bus.SR2.HasBits(stm32.I2C_SR2_BUSY) {
@@ -576,7 +576,7 @@ func (i2c I2C) signalStart() error {
 }
 
 // signalStop sends a stop signal and waits for it to succeed.
-func (i2c I2C) signalStop() error {
+func (i2c *I2C) signalStop() error {
 	// Generate stop condition
 	i2c.Bus.CR1.SetBits(stm32.I2C_CR1_STOP)
 
@@ -585,7 +585,7 @@ func (i2c I2C) signalStop() error {
 }
 
 // waitForStop waits after a stop signal.
-func (i2c I2C) waitForStop() error {
+func (i2c *I2C) waitForStop() error {
 	// Wait until I2C is stopped
 	timeout := i2cTimeout
 	for i2c.Bus.SR1.HasBits(stm32.I2C_SR1_STOPF) {
@@ -599,7 +599,7 @@ func (i2c I2C) waitForStop() error {
 }
 
 // Send address of device we want to talk to
-func (i2c I2C) sendAddress(address uint8, write bool) error {
+func (i2c *I2C) sendAddress(address uint8, write bool) error {
 	data := (address << 1)
 	if !write {
 		data |= 1 // set read flag
@@ -640,7 +640,7 @@ func (i2c I2C) sendAddress(address uint8, write bool) error {
 }
 
 // WriteByte writes a single byte to the I2C bus.
-func (i2c I2C) WriteByte(data byte) error {
+func (i2c *I2C) WriteByte(data byte) error {
 	// Send data byte
 	i2c.Bus.DR.Set(uint32(data))
 
