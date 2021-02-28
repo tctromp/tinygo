@@ -348,8 +348,9 @@ func FlashGDB(pkgName string, ocdOutput bool, options *compileopts.Options) erro
 	if err != nil {
 		return err
 	}
-	if config.Target.GDB == "" {
-		return errors.New("gdb not configured in the target specification")
+	gdb, err := config.Target.Debugger()
+	if err != nil {
+		return err
 	}
 
 	return builder.Build(pkgName, "", config, func(result builder.BuildResult) error {
@@ -494,11 +495,11 @@ func FlashGDB(pkgName string, ocdOutput bool, options *compileopts.Options) erro
 		for _, cmd := range gdbCommands {
 			params = append(params, "-ex", cmd)
 		}
-		cmd := executeCommand(config.Options, config.Target.GDB, params...)
+		cmd := executeCommand(config.Options, gdb, params...)
 		cmd.Stdin = os.Stdin
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
-		err := cmd.Run()
+		err = cmd.Run()
 		if err != nil {
 			return &commandError{"failed to run gdb with", result.Binary, err}
 		}
