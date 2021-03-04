@@ -499,7 +499,7 @@ func FlashGDB(pkgName string, ocdOutput bool, options *compileopts.Options) erro
 		cmd.Stdin = os.Stdin
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
-		err = cmd.Run()
+		err := cmd.Run()
 		if err != nil {
 			return &commandError{"failed to run gdb with", result.Binary, err}
 		}
