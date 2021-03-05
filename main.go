@@ -348,7 +348,7 @@ func FlashGDB(pkgName string, ocdOutput bool, options *compileopts.Options) erro
 	if err != nil {
 		return err
 	}
-	gdb, err := config.Target.Debugger()
+	gdb, err := config.Target.LookupGDB()
 	if err != nil {
 		return err
 	}

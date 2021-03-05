@@ -273,7 +273,8 @@ func defaultTarget(goos, goarch, triple string) (*TargetSpec, error) {
 	return &spec, nil
 }
 
-func (spec *TargetSpec) Debugger() (string, error) {
+// LookupGDB looks up a gdb executable.
+func (spec *TargetSpec) LookupGDB() (string, error) {
 	if len(spec.GDB) == 0 {
 		return "", errors.New("gdb not configured in the target specification")
 	}
