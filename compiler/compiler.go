@@ -334,11 +334,12 @@ func CompileProgram(lprogram *loader.Program, machine llvm.TargetMachine, config
 }
 
 // CompilePackage compiles a single package to a LLVM module.
-func CompilePackage(moduleName string, pkg *loader.Package, machine llvm.TargetMachine, config *Config, dumpSSA bool) (llvm.Module, []error) {
+func CompilePackage(moduleName string, pkg *loader.Package, ssaPkg *ssa.Package, machine llvm.TargetMachine, config *Config, dumpSSA bool) (llvm.Module, []error) {
 	c := newCompilerContext(moduleName, machine, config, dumpSSA)
+	c.runtimePkg = ssaPkg.Prog.ImportedPackage("runtime").Pkg
+	c.program = ssaPkg.Prog
 
 	// Build SSA from AST.
-	ssaPkg := pkg.LoadSSA()
 	ssaPkg.Build()
 
 	// Sort by position, so that the order of the functions in the IR matches
@@ -720,8 +721,9 @@ func (c *compilerContext) attachDebugInfo(f *ssa.Function) llvm.Metadata {
 // debug info is added to the function.
 func (c *compilerContext) attachDebugInfoRaw(f *ssa.Function, llvmFn llvm.Value, suffix, filename string, line int) llvm.Metadata {
 	// Debug info for this function.
-	diparams := make([]llvm.Metadata, 0, len(f.Params))
-	for _, param := range f.Params {
+	params := getParams(f.Signature)
+	diparams := make([]llvm.Metadata, 0, len(params))
+	for _, param := range params {
 		diparams = append(diparams, c.getDIType(param.Type()))
 	}
 	diFuncType := c.dibuilder.CreateSubroutineType(llvm.DISubroutineType{

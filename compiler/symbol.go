@@ -72,7 +72,7 @@ func (c *compilerContext) getFunction(fn *ssa.Function) llvm.Value {
 	}
 
 	var paramInfos []paramInfo
-	for _, param := range fn.Params {
+	for _, param := range getParams(fn.Signature) {
 		paramType := c.getLLVMType(param.Type())
 		paramFragmentInfos := expandFormalParamType(paramType, param.Name(), param.Type())
 		paramInfos = append(paramInfos, paramFragmentInfos...)
@@ -315,6 +315,20 @@ func (c *compilerContext) loadASTComments(lprogram *loader.Program) {
 			}
 		}
 	}
+}
+
+// getParams returns the function parameters, including the receiver at the
+// start. This is an alternative to the Params member of *ssa.Function, which is
+// not yet populated when the package has not yet been built.
+func getParams(sig *types.Signature) []*types.Var {
+	params := []*types.Var{}
+	if sig.Recv() != nil {
+		params = append(params, sig.Recv())
+	}
+	for i := 0; i < sig.Params().Len(); i++ {
+		params = append(params, sig.Params().At(i))
+	}
+	return params
 }
 
 // getGlobal returns a LLVM IR global value for a Go SSA global. It is added to

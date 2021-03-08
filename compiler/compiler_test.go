@@ -65,13 +65,19 @@ func TestCompiler(t *testing.T) {
 			}
 
 			// Compile AST to IR.
+			program := lprogram.LoadSSA()
 			pkg := lprogram.MainPkg()
-			mod, errs := CompilePackage(testCase, pkg, machine, compilerConfig, false)
+			ssaPkg := program.Package(pkg.Pkg)
+			mod, errs := CompilePackage(testCase, pkg, ssaPkg, machine, compilerConfig, false)
 			if errs != nil {
 				for _, err := range errs {
 					t.Log("error:", err)
 				}
 				return
+			}
+
+			if err := llvm.VerifyModule(mod, llvm.PrintMessageAction); err != nil {
+				t.Fatal("invalid IR after package was compiled")
 			}
 
 			// Optimize IR a little.
