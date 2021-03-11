@@ -254,7 +254,7 @@ func defaultTarget(goos, goarch, triple string) (*TargetSpec, error) {
 	}
 	if goarch != runtime.GOARCH {
 		// Some educated guesses as to how to invoke helper programs.
-		spec.GDB = []string{"gdb-multiarch", "arm-none-eabi-gdb"}
+		spec.GDB = []string{"gdb-multiarch"}
 		if goarch == "arm" && goos == "linux" {
 			spec.CFlags = append(spec.CFlags, "--sysroot=/usr/arm-linux-gnueabihf")
 			spec.Linker = "arm-linux-gnueabihf-gcc"
