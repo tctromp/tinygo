@@ -284,5 +284,5 @@ func (spec *TargetSpec) LookupGDB() (string, error) {
 			return d, nil
 		}
 	}
-	return "", errors.New("no gdb found configured in the target specification")
+	return "", errors.New("no gdb found configured in the target specification (" + strings.Join(spec.GDB, ", ") + ")")
 }
