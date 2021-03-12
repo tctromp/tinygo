@@ -444,7 +444,8 @@ func Build(pkgName, outpath string, config *compileopts.Config, action func(Buil
 			job := &compileJob{
 				description: "compile CGo file " + file,
 				run: func() error {
-					err := runCCompiler(config.Target.Compiler, append(config.CFlags(), "-c", "-o", outpath, file)...)
+					cflags := append([]string{"-c", "-o", outpath, file}, pkg.CFlags...)
+					err := runCCompiler(config.Target.Compiler, cflags...)
 					if err != nil {
 						return &commandError{"failed to build", file, err}
 					}
